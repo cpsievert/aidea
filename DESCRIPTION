@@ -1,0 +1,21 @@
+Package: aidea
+Title: What the Package Does (One Line, Title Case)
+Version: 0.0.0.9000
+Authors@R: 
+    person("Carson", "Sievert", , "carson@posit.co", role = c("aut", "cre"))
+Description: What the package does (one paragraph).
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports: 
+    bslib,
+    glue,
+    shiny,
+    skimr,
+    quarto,
+    jsonlite,
+    withr
+Remotes:
+    hadley/elmer,
+    jcheng5/shinychat

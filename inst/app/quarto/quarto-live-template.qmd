@@ -1,0 +1,93 @@
+---
+format: 
+  live-html:
+    page-layout: full
+resources:
+  - data.rds
+engine: knitr
+---
+
+{{< include ./_extensions/r-wasm/live/_knitr.qmd >}}
+
+```{webr}
+#| autorun: true
+#| echo: false
+$$$data_name$$$ <- readRDS("data.rds")
+```
+
+```{webr}
+#| caption: "R Console"
+#| autorun: true
+#| exercise: ex_2
+$$$code$$$
+```
+
+<script>
+
+// Whenever stuff gets added to the output container, we extract all the 
+// text and display canvas (as images) in the output container and 
+// send it to the parent
+function send_cell_output_to_parent(output_container) {
+  const data_to_send = [];
+
+  output_container.querySelectorAll('.cell-output-display > canvas').forEach((canvas) => {
+    data_to_send.push({
+      type: 'image',
+      content: canvas.toDataURL('image/png')
+    });
+  });
+
+  let stdout = "";
+
+  output_container.querySelectorAll('.cell-output-stdout').forEach((el) => {
+    stdout += el.textContent;
+  });
+
+  if (stdout) {
+    data_to_send.push({
+      type: 'text',
+      content: stdout
+    });
+  }
+
+  window.parent.postMessage(data_to_send, "*");
+}
+
+function waitForElement(selector) {
+  return new Promise(resolve => {
+    if (document.querySelector(selector)) {
+      return resolve(document.querySelector(selector));
+    }
+
+    const observer = new MutationObserver(mutations => {
+      if (document.querySelector(selector)) {
+        resolve(document.querySelector(selector));
+        observer.disconnect();
+      }
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  });
+}
+
+waitForElement('.cell-output-container').then((output_container) => {
+  send_cell_output_to_parent(output_container);
+});
+
+</script>
+
+<style>
+main {
+  margin: 0 !important;
+}
+.cm-editor {
+  font-size: smaller !important;
+}
+/* Must be a better way to suppress downloading messages? */
+.cell-output-stderr {
+  display: none;
+}
+</style>
