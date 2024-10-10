@@ -20,14 +20,10 @@ NULL
 assist <- function(data) {
   data_name <- as.character(substitute(data))
 
+  # Directory holding assets for the app
   app_dir <- system.file("app", package = "aidea")
-  quarto_dir <- file.path(app_dir, "quarto")
-  # TODO: do this in a tempdir, not pkg dir
-  shiny::addResourcePath("quarto", quarto_dir)
-  shiny::addResourcePath("www", file.path(app_dir, "www"))
 
-  saveRDS(data, file.path(quarto_dir, "data.rds"))
-
+  # Get the prompt and start the chat
   prompt_template <- paste(
     readLines(file.path(app_dir, "prompt.md")),
     collapse = "\n"
@@ -39,10 +35,33 @@ assist <- function(data) {
     api_args = list(temperature = 0),
   )
 
+  # Make JS/CSS assets available
+  shiny::addResourcePath("www", file.path(app_dir, "www"))
+
+  # For the Quarto portion, set up a tempdir where the 
+  # doc will render and supporting files will live
+  user_dir <- tempfile()
+  dir.create(user_dir)
+  on.exit(unlink(user_dir), add = TRUE)
+  
+  # Make the data available to the Quarto doc
+  saveRDS(data, file.path(user_dir, "data.rds"))
+
+  # Copy quarto extensions over to the user dir (for rendering)
+  quarto_dir <- file.path(app_dir, "quarto")
+  file.copy(
+    file.path(quarto_dir, "_extensions"),
+    user_dir,
+    recursive = TRUE,
+    overwrite = TRUE
+  )
+  # Grab the quarto template (which will be filled in with code suggestions)
   quarto_template <- paste(
     readLines(file.path(quarto_dir, "quarto-live-template.qmd")),
     collapse = "\n"
   )
+  # Need to make the Quarto assets available for the iframe
+  shiny::addResourcePath("quarto-assets", user_dir)
 
   ui <- page_sidebar(
     shinychat::chat_ui("chat"), # TODO: shinychat doesn't work with dynamic UI
@@ -94,7 +113,7 @@ assist <- function(data) {
       validate(
         need(
           nzchar(code),
-          "No code artifacts created yet. Try asking a question that yield a code suggestion and click the 'Run this code' button."
+          "No code suggestions made yet. Try asking a question that produces a code suggestion and click the 'Run this code' button."
         )
       )
 
@@ -104,13 +123,13 @@ assist <- function(data) {
         .close = "$$$",
       )
 
-      withr::with_dir(quarto_dir, {
+      withr::with_dir(user_dir, {
         writeLines(quarto_src, "quarto-live.qmd")
         quarto::quarto_render("quarto-live.qmd")
       })
 
       tags$iframe(
-        src = "quarto/quarto-live.html",
+        src = "quarto-assets/quarto-live.html",
         width = "100%",
         height = "400px",
         frameborder = "0",
