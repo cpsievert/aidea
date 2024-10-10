@@ -30,7 +30,7 @@ $$$code$$$
 function send_cell_output_to_parent(output_container) {
   const data_to_send = [];
 
-  output_container.querySelectorAll('.cell-output-display > canvas').forEach((canvas) => {
+  document.querySelectorAll('.cell-output-display > canvas').forEach((canvas) => {
     data_to_send.push({
       type: 'image',
       content: canvas.toDataURL('image/png')
@@ -39,7 +39,7 @@ function send_cell_output_to_parent(output_container) {
 
   let stdout = "";
 
-  output_container.querySelectorAll('.cell-output-stdout').forEach((el) => {
+  document.querySelectorAll('.cell-output-stdout').forEach((el) => {
     stdout += el.textContent;
   });
 
@@ -53,30 +53,19 @@ function send_cell_output_to_parent(output_container) {
   window.parent.postMessage(data_to_send, "*");
 }
 
-function waitForElement(selector) {
-  return new Promise(resolve => {
-    if (document.querySelector(selector)) {
-      return resolve(document.querySelector(selector));
-    }
+const selector = '.cell-output-container';
 
-    const observer = new MutationObserver(mutations => {
-      if (document.querySelector(selector)) {
-        resolve(document.querySelector(selector));
-        observer.disconnect();
-      }
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-  });
-}
-
-waitForElement('.cell-output-container').then((output_container) => {
-  send_cell_output_to_parent(output_container);
+const observer = new MutationObserver(mutations => {
+  const el = document.querySelector(selector);
+  if (el) {
+    send_cell_output_to_parent(el);
+  }
 });
 
+observer.observe(document.body, {
+  childList: true,
+  subtree: true
+});
 </script>
 
 <style>

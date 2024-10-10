@@ -66,6 +66,27 @@ assist <- function(data) {
   ui <- page_sidebar(
     shinychat::chat_ui("chat"), # TODO: shinychat doesn't work with dynamic UI
     tags$script(src = "www/helpers.js"),
+    div(
+      class = "offcanvas offcanvas-start",
+      tabindex = "-1",
+      id = "offcanvas-interpret",
+      "data-bs-scroll" = "true",
+      div(
+        class = "offcanvas-header",
+        uiOutput("interpret_title"),
+        tags$button(
+          type = "button",
+          class = "btn-close",
+          `data-bs-dismiss` = "offcanvas",
+          `aria-label` = "Close"
+        )
+      ),
+      div(
+        class = "offcanvas-body",
+        tags$style("#offcanvas-interpret shiny-chat-input {display: none;}"),
+        shinychat::chat_ui("chat_interpret")
+      )
+    ),
     title = "EDA with R assistant 🤖",
     sidebar = sidebar(
       open = FALSE,
@@ -74,13 +95,20 @@ assist <- function(data) {
       style = "height:100%;",
       gap = 0,
       id = "sidebar-repl",
-      uiOutput("quarto_live", fill = TRUE),
+      uiOutput("editor", fill = TRUE),
       actionButton(
         "interpret_editor_results",
         "Interpret results",
         icon = icon("wand-sparkles"),
-        disabled = TRUE
+        disabled = TRUE,
+        "data-bs-toggle" = "offcanvas",
+        "data-bs-target" = "#offcanvas-interpret",
+        "aria-controls" = "offcanvas-interpret"
       )
+    ),
+    theme = bslib::bs_theme(
+      "offcanvas-horizontal-width" = "600px",
+      "offcanvas-backdrop-opacity" = 0
     )
   )
 
@@ -104,11 +132,28 @@ assist <- function(data) {
       input$editor_code
     })
 
+    interpret_title <- reactiveVal(NULL)
+
     observeEvent(editor_code(), {
       bslib::sidebar_toggle("sidebar-repl", open = TRUE)
+
+      res <- chat$chat(
+        "I've selected the following code to run in an R console.",
+        paste("```r", editor_code(), "```"),
+        "Provide to me a short summary title capturing the main idea of this code does. ",
+        "It'll get used in the UI so that the user can refer back to it later.",
+        "Don't bother with putting a Title: prefix or markdown formatting, just the title."
+      )
+
+      interpret_title(as.character(res))
     })
 
-    output$quarto_live <- renderUI({
+    output$interpret_title <- renderUI({
+      req(interpret_title())
+      tags$h5(interpret_title())
+    })
+
+    output$editor <- renderUI({
       code <- paste(editor_code(), collapse = "\n")
       validate(
         need(
@@ -137,11 +182,14 @@ assist <- function(data) {
       )
     })
 
-    observeEvent(input$editor_results, {
+    results_have_interpretation <- reactiveVal(FALSE)
+
+    observeEvent(editor_results(), {
       updateActionButton(
         inputId = "interpret_editor_results",
         disabled = FALSE
       )
+      results_have_interpretation(FALSE)
     })
 
     editor_results <- reactive({
@@ -159,6 +207,19 @@ assist <- function(data) {
     })
 
     observeEvent(input$interpret_editor_results, {
+
+      if (results_have_interpretation()) {
+        return()
+      }
+
+      results_have_interpretation(TRUE)
+
+      # TODO: shinychat needs a way to clear the chat
+      shiny::removeUI(
+        selector = "#chat_interpret shiny-chat-message",
+        multiple = TRUE,
+      )
+
       chat_input <- rlang::list2(
         "The following code:",
         "```r",
@@ -170,7 +231,11 @@ assist <- function(data) {
       )
 
       stream <- chat$stream_async(!!!chat_input)
-      shinychat::chat_append("chat", stream)
+
+      shinychat::chat_append(
+        "chat_interpret", 
+        stream
+      )
     })
   }
 
