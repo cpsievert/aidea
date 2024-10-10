@@ -4,10 +4,13 @@
 \alias{assist}
 \title{Launch the AI-powered EDA assistant}
 \usage{
-assist(data)
+assist(data, chat = NULL)
 }
 \arguments{
 \item{data}{A data frame.}
+
+\item{chat}{A \link[elmer:Chat]{elmer::Chat} instance (e.g., \code{elmer::chat_ollama()}).
+Be aware that any \code{system_prompt} will be overwritten.}
 }
 \description{
 Launch the AI-powered EDA assistant

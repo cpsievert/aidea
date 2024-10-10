@@ -11,13 +11,15 @@ NULL
 #' Launch the AI-powered EDA assistant
 #' 
 #' @param data A data frame.
+#' @param chat A [elmer::Chat] instance (e.g., `elmer::chat_ollama()`). 
+#' Be aware that any `system_prompt` will be overwritten.
 #' 
 #' @export 
 #' @examples
 #' 
 #' data(diamonds, package = "ggplot2")
 #' assist(diamonds)
-assist <- function(data) {
+assist <- function(data, chat = NULL) {
   data_name <- as.character(substitute(data))
 
   # Directory holding assets for the app
@@ -30,10 +32,14 @@ assist <- function(data) {
   )
   prompt <- glue::glue(prompt_template)
 
-  chat <- elmer::chat_openai(
-    system_prompt = prompt,
-    api_args = list(temperature = 0),
-  )
+  if (is.null(chat)) {
+    chat <- elmer::chat_openai(
+      system_prompt = prompt,
+      api_args = list(temperature = 0),
+    )
+  } else {
+    chat$system_prompt <- prompt
+  }
 
   # Make JS/CSS assets available
   shiny::addResourcePath("www", file.path(app_dir, "www"))
