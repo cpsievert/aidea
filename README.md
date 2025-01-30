@@ -18,7 +18,7 @@ To use this package, you'll also need credentials for the LLM that powers `assis
 
 By default, `assist()` uses OpenAI, so you'll need to set an environment variable named `OPENAI_API_KEY` using the key from https://platform.openai.com/account/api-keys
 
-We recommend setting that variable via `usethis::use_renviron()`. See [`{elmer}`](https://github.com/hadley/elmer/?tab=readme-ov-file#prerequisites)'s prerequisites if you plan on using a different model.
+We recommend setting that variable via `usethis::edit_r_environ()`. See [`{ellmer}`](https://github.com/hadley/ellmer/?tab=readme-ov-file#prerequisites)'s prerequisites if you plan on using a different model.
 
 ## Usage
 
@@ -56,7 +56,7 @@ When you're unsure of how to interpret the results, press the interpret button. 
 
 ## How does it work?
 
-This package uses a combination of [`{elmer}`](https://github.com/hadley/elmer) and [`{shinychat}`](https://github.com/jcheng5/shinychat/) to provide the LLM assisted chatbot experience. 
+This package uses a combination of [`{ellmer}`](https://github.com/hadley/ellmer) and [`{shinychat}`](https://github.com/jcheng5/shinychat/) to provide the LLM assisted chatbot experience. 
 It **does not** send all of your data to the LLM, just basic summary stats (e.g., number of rows/columns) and data characteristics (e.g., variable types). 
 It will, however, send any results you choose to interpret to the LLM.
-If you are worried about privacy, consider using a local model (i.e., `assist(chat = elmer::chat_ollama())`) instead of OpenAI
+If you are worried about privacy, consider using a local model (i.e., `assist(chat = ellmer::chat_ollama())`) instead of OpenAI

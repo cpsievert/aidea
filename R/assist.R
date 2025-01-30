@@ -1,7 +1,7 @@
 #' @import shiny
 #' @import bslib
 #' @import shinychat
-#' @import elmer
+#' @import ellmer
 #' @import quarto
 #' @import glue
 #' @import jsonlite
@@ -9,14 +9,14 @@
 NULL
 
 #' Launch the AI-powered EDA assistant
-#' 
+#'
 #' @param data A data frame.
-#' @param chat A [elmer::Chat] instance (e.g., `elmer::chat_ollama()`). 
+#' @param chat A [ellmer::Chat] instance (e.g., `ellmer::chat_ollama()`).
 #' Be aware that any `system_prompt` will be overwritten.
-#' 
-#' @export 
+#'
+#' @export
 #' @examples
-#' 
+#'
 #' data(diamonds, package = "ggplot2")
 #' assist(diamonds)
 assist <- function(data, chat = NULL) {
@@ -33,7 +33,7 @@ assist <- function(data, chat = NULL) {
   prompt <- glue::glue(prompt_template)
 
   if (is.null(chat)) {
-    chat <- elmer::chat_openai(
+    chat <- ellmer::chat_openai(
       system_prompt = prompt,
       api_args = list(temperature = 0),
     )
@@ -44,12 +44,12 @@ assist <- function(data, chat = NULL) {
   # Make JS/CSS assets available
   shiny::addResourcePath("www", file.path(app_dir, "www"))
 
-  # For the Quarto portion, set up a tempdir where the 
+  # For the Quarto portion, set up a tempdir where the
   # doc will render and supporting files will live
   user_dir <- tempfile()
   dir.create(user_dir)
   on.exit(unlink(user_dir), add = TRUE)
-  
+
   # Make the data available to the Quarto doc
   saveRDS(data, file.path(user_dir, "data.rds"))
 
@@ -129,7 +129,7 @@ assist <- function(data, chat = NULL) {
     observeEvent(input$chat_user_input, {
       stream <- chat$stream_async(
         input$chat_user_input,
-        !!!lapply(input$file, elmer::content_image_file)
+        !!!lapply(input$file, ellmer::content_image_file)
       )
       shinychat::chat_append("chat", stream)
     })
@@ -203,7 +203,7 @@ assist <- function(data, chat = NULL) {
       results <- jsonlite::fromJSON(input$editor_results, simplifyDataFrame = FALSE)
       lapply(results, function(x) {
         if (x$type == "image") {
-          elmer::content_image_url(x$content)
+          ellmer::content_image_url(x$content)
         } else if (x$type == "text") {
           x$content
         } else {
@@ -239,7 +239,7 @@ assist <- function(data, chat = NULL) {
       stream <- chat$stream_async(!!!chat_input)
 
       shinychat::chat_append(
-        "chat_interpret", 
+        "chat_interpret",
         stream
       )
     })

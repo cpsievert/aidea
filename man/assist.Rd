@@ -9,7 +9,7 @@ assist(data, chat = NULL)
 \arguments{
 \item{data}{A data frame.}
 
-\item{chat}{A \link[elmer:Chat]{elmer::Chat} instance (e.g., \code{elmer::chat_ollama()}).
+\item{chat}{A \link[ellmer:Chat]{ellmer::Chat} instance (e.g., \code{ellmer::chat_ollama()}).
 Be aware that any \code{system_prompt} will be overwritten.}
 }
 \description{
