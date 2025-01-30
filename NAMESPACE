@@ -2,7 +2,7 @@
 
 export(assist)
 import(bslib)
-import(elmer)
+import(ellmer)
 import(glue)
 import(jsonlite)
 import(quarto)
