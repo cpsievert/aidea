@@ -38,7 +38,7 @@ assist <- function(data, chat = NULL) {
       api_args = list(temperature = 0),
     )
   } else {
-    chat$system_prompt <- prompt
+    chat$set_system_prompt(prompt)
   }
 
   # Make JS/CSS assets available
